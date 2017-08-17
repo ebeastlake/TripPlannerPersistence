@@ -9,7 +9,7 @@
  * then tells the trip module to add the attraction.
  */
  
-$(function () {
+ $(function () {
 
     // jQuery selects
     var $optionsPanel = $('#options-panel');
@@ -21,22 +21,52 @@ $(function () {
     // This looks like a great place to start AJAX work with a request for all attractions. Don't forget that these kinds of requests are async, so we won't have all of the attractions until it comes back, but once it comes back we can make the option tags
   // ~~~~~~~~~~~~~~~~~~~~~~~
 
-    // make all the option tags (second arg of `forEach` is a `this` binding)
-    hotels.forEach(makeOption, $hotelSelect);
-    restaurants.forEach(makeOption, $restaurantSelect);
-    activities.forEach(makeOption, $activitySelect);
+    function getAllData() {
+        return $.ajax({
+            method: 'GET', 
+            url: '/api/options'
+        })
+    }
 
-    // Once you've made AJAX calls to retrieve this information,
-    // call attractions.loadEnhancedAttractions in the fashion
-    // exampled below in order to integrate it.
-    attractionsModule.loadEnhancedAttractions('hotels', hotels);
-    attractionsModule.loadEnhancedAttractions('restaurants', restaurants);
-    attractionsModule.loadEnhancedAttractions('activities', activities);
+    function renderOptions(values) {
+        const hotels = values[0];
+        const restaurants = values[1];
+        const activities = values[2];
+
+        // make all the option tags (second arg of `forEach` is a `this` binding)
+        hotels.forEach(makeOption, $hotelSelect);
+        restaurants.forEach(makeOption, $restaurantSelect);
+        activities.forEach(makeOption, $activitySelect);
+
+        // Once you've made AJAX calls to retrieve this information,
+        // call attractions.loadEnhancedAttractions in the fashion
+        // exampled below in order to integrate it.
+        attractionsModule.loadEnhancedAttractions('hotels', hotels);
+        attractionsModule.loadEnhancedAttractions('restaurants', restaurants);
+        attractionsModule.loadEnhancedAttractions('activities', activities);
+    }
+
+    getAllData()
+    .then(function(response) {
+        renderOptions(response);
+    })
+
+    // // make all the option tags (second arg of `forEach` is a `this` binding)
+    // hotels.forEach(makeOption, $hotelSelect);
+    // restaurants.forEach(makeOption, $restaurantSelect);
+    // activities.forEach(makeOption, $activitySelect);
+
+    // // Once you've made AJAX calls to retrieve this information,
+    // // call attractions.loadEnhancedAttractions in the fashion
+    // // exampled below in order to integrate it.
+    // attractionsModule.loadEnhancedAttractions('hotels', hotels);
+    // attractionsModule.loadEnhancedAttractions('restaurants', restaurants);
+    // attractionsModule.loadEnhancedAttractions('activities', activities);
 
     function makeOption(databaseAttraction) {
         var $option = $('<option></option>') // makes a new option tag
-          .text(databaseAttraction.name)
-          .val(databaseAttraction.id);
+        .text(databaseAttraction.name)
+        .val(databaseAttraction.id);
         this.append($option); // add the option to the specific select
     }
 

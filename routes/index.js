@@ -20,4 +20,10 @@ router.get('/', function(req, res, next) {
   .catch(next);
 });
 
+// send this to an /api/options.js file
+router.use('/api/options', require('./api/options.js'));
+
+// hook up the /api/days.js file
+router.use('/api/days', require('./api/days.js'));
+
 module.exports = router;
