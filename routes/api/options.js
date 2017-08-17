@@ -2,6 +2,7 @@ var Promise = require('bluebird');
 var Hotel = require('../../models').Hotel;
 var Restaurant = require('../../models').Restaurant;
 var Activity = require('../../models').Activity;
+var Day = require('../../models').Day;
 
 var options = require('express').Router();
 

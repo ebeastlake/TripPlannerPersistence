@@ -8,12 +8,29 @@ var Activity = require('./activity');
 var Day = db.define('day', {
   number: {
     type: Sequelize.INTEGER,
-    validate: { min: 0 }
+    validate: { min: 1 }
+  }
+}, {
+  hooks: {
+  	afterDestroy: function() {
+  		Day.findAll()
+  		.then(function(days) {
+  			var promises = [];
+  			days.forEach(function(day, i) {
+  				day.number = i + 1;
+  				promises.push(day.save());
+  			})
+  			return Promise.all(promises);
+  		})
+  		.then(function(days) {
+  			console.log("Successfully updated day numbers!");
+  		})
+  	}
   }
 })
 
-Day.belongsTo(Hotel);
-Day.belongsToMany(Restaurant, {through: 'day_restaurant'});
-Day.belongsToMany(Activity, {through: 'day_activity'});
+
+
+// might want to write instance methods for getting hotel, restaurant, activities
 
 module.exports = Day;

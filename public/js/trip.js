@@ -15,12 +15,12 @@
  * which take `attraction` objects and pass them to `currentDay`.
  */
 
-var tripModule = (function () {
+ var tripModule = (function () {
 
   // application state
 
   var days = [],
-      currentDay;
+  currentDay;
 
   // jQuery selections
 
@@ -38,45 +38,75 @@ var tripModule = (function () {
     currentDay.show();
   }
 
+  let getAllDays = function(){
+    return $.ajax({
+      method: 'GET',
+      url: '/api/days'
+    })
+  }
+
+  let renderAllDays = function(days){
+    days.forEach(showDay);
+  }  
+
  // ~~~~~~~~~~~~~~~~~~~~~~~
     // before calling `addDay` or `deleteCurrentDay` that update the frontend (the UI), we need to make sure that it happened successfully on the server
   // ~~~~~~~~~~~~~~~~~~~~~~~
   $(function () {
-    $addButton.on('click', addDay);
-    $removeButton.on('click', deleteCurrentDay);
+
+    $addButton.on('click', function() {
+      createDay()
+      .then(function(day) {
+        showDay(day);
+      })
+    });
+
+    $removeButton.on('click', function() {
+      //$(.'day-btn').remove();
+      dbDeleteDay()
+      .then(function(response) {
+        console.log(response.status);
+        console.log("Successfully deleted a day!");
+        deleteCurrentDay();
+      })
+    });
   });
+
+  function createDay() {
+    console.log("Trying to make a day!");
+    return $.ajax({
+      method: 'POST',
+      url: '/api/days'
+    })
+  }
+
+  function dbDeleteDay() {
+    console.log("Trying to delete: " + currentDay.id);
+    console.log("Sending request to  /api/days/" + currentDay.id);
+    return $.ajax({
+      method: 'DELETE',
+      url: '/api/days/' + currentDay.id
+    })
+  }
 
 
 
   // ~~~~~~~~~~~~~~~~~~~~~~~
     // `addDay` may need to take information now that we can persist days -- we want to display what is being sent from the DB
   // ~~~~~~~~~~~~~~~~~~~~~~~
-  function addDay () { 
-    if (this && this.blur) this.blur(); // removes focus box from buttons
-    var newDay = dayModule.create({ number: days.length + 1 }); // dayModule
-    days.push(newDay);
-    if (days.length === 1) {
-      currentDay = newDay;
-    }
+  function showDay(day) { 
+    var newDay = dayModule.create(day); // dayModule
     switchTo(newDay);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~
     // Do not delete a day until it has already been deleted from the DB
   // ~~~~~~~~~~~~~~~~~~~~~~~
-  function deleteCurrentDay () {
-    // prevent deleting last day
-    if (days.length < 2 || !currentDay) return;
-    // remove from the collection
-    var index = days.indexOf(currentDay),
-      previousDay = days.splice(index, 1)[0],
-      newCurrent = days[index] || days[index - 1];
-    // fix the remaining day numbers
-    days.forEach(function (day, i) {
-      day.setNumber(i + 1);
-    });
-    switchTo(newCurrent);
-    previousDay.hideButton();
+  function deleteCurrentDay() {
+    getAllDays()
+    .then(function(days){
+      renderAllDays(days);
+    }) 
   }
 
   // globally accessible module methods
@@ -85,10 +115,14 @@ var tripModule = (function () {
 
     load: function () {
 
+      getAllDays()
+      .then(function(days){
+        renderAllDays(days);
+      }) 
+
       // ~~~~~~~~~~~~~~~~~~~~~~~
         //If we are trying to load existing Days, then let's make a request to the server for the day. Remember this is async. For each day we get back what do we need to do to it?
       // ~~~~~~~~~~~~~~~~~~~~~~~
-      $(addDay);
     },
 
     switchTo: switchTo,

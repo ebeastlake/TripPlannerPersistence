@@ -29,15 +29,15 @@ var dayModule = (function () {
   // ~~~~~~~~~~~~~~~~~~~~~~~
   function Day (data) {
     // for brand-new days
-    this.number = 0;
-    this.hotel = null;
+    this.number = data.number;
+    this.hotel = data.hotel;
     this.restaurants = [];
     this.activities = [];
     // for days based on existing data
     utilsModule.merge(data, this);
-    if (this.hotel) this.hotel = attractionsModule.getEnhanced(this.hotel);
-    this.restaurants = this.restaurants.map(attractionsModule.getEnhanced);
-    this.activities = this.activities.map(attractionsModule.getEnhanced);
+    if (this.hotel) this.hotel = attractionModule.create(this.hotel);
+    this.restaurants = this.restaurants.map(attractionModule.create);
+    this.activities = this.activities.map(attractionModule.create);
     // remainder of constructor
     this.buildButton().showButton();
   }
@@ -98,22 +98,49 @@ var dayModule = (function () {
     // es6 template literals might be helpful for the url route path for your AJAX request
   // ~~~~~~~~~~~~~~~~~~~~~~~
   Day.prototype.addAttraction = function (attraction) {
+    
+    var addToDb;
     // adding to the day object
     switch (attraction.type) {
       case 'hotel':
         if (this.hotel) this.hotel.hide();
         this.hotel = attraction;
+        addToDb = $.ajax({
+          method: 'PUT',
+          url: '/days/' + this.id + '/hotel',
+          data: {
+            hotelId: attraction.id
+          }
+        });
         break;
       case 'restaurant':
         utilsModule.pushUnique(this.restaurants, attraction);
+        addToDb = $.ajax({
+          method: 'PUT',
+          url: '/days/' + this.id + '/restaurant',
+          data: {
+            restaurantId: attraction.id
+          }
+        });
         break;
       case 'activity':
         utilsModule.pushUnique(this.activities, attraction);
+        addToDb = $.ajax({
+          method: 'PUT',
+          url: '/days/' + this.id + '/activity',
+          data: {
+            activityId: attraction.id
+          }
+        });
         break;
       default: console.error('bad type:', attraction);
     }
-    // activating UI
-    attraction.show();
+    addToDb
+    .then(function() {
+      // activating UI
+      attraction.show();
+    })
+    .catch(err);
   };
 
 
@@ -122,21 +149,38 @@ var dayModule = (function () {
     // es6 template literals might be helpful for the url route path for your AJAX request
   // ~~~~~~~~~~~~~~~~~~~~~~~
   Day.prototype.removeAttraction = function (attraction) {
+    var removeFromDb;
     // removing from the day object
     switch (attraction.type) {
       case 'hotel':
         this.hotel = null;
+        removeFromDb = $.ajax({
+          method: 'DELETE',
+          url: '/days/' + this.id + '/hotel';
+        });
         break;
       case 'restaurant':
         utilsModule.remove(this.restaurants, attraction);
+        removeFromDb = $.ajax({
+          method: 'DELETE',
+          url: '/days/' + this.id + '/restaurant' + attraction.id;
+        });
         break;
       case 'activity':
         utilsModule.remove(this.activities, attraction);
+        removeFromDb = $.ajax({
+          method: 'DELETE',
+          url: '/days/' + this.id + '/activity' + attraction.id;
+        });
         break;
       default: console.error('bad type:', attraction);
     }
-    // deactivating UI
-    attraction.hide();
+    removeFromDb
+    .then(function(){
+      // deactivating UI
+      attraction.hide();
+    })
+    .catch(err);
   };
 
   // globally accessible module methods

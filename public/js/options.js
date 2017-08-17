@@ -33,35 +33,18 @@
         const restaurants = values[1];
         const activities = values[2];
 
-        // make all the option tags (second arg of `forEach` is a `this` binding)
-        hotels.forEach(makeOption, $hotelSelect);
-        restaurants.forEach(makeOption, $restaurantSelect);
-        activities.forEach(makeOption, $activitySelect);
+        attractionsModule.setAttractions(attractions);
+        attractions.hotels.forEach(makeOption, $hotelSelect);
+        attractions.restaurants.forEach(makeOption, $restaurantSelect);
+        attractions.activities.forEach(makeOption, $activitySelect);
 
-        // Once you've made AJAX calls to retrieve this information,
-        // call attractions.loadEnhancedAttractions in the fashion
-        // exampled below in order to integrate it.
-        attractionsModule.loadEnhancedAttractions('hotels', hotels);
-        attractionsModule.loadEnhancedAttractions('restaurants', restaurants);
-        attractionsModule.loadEnhancedAttractions('activities', activities);
     }
 
     getAllData()
     .then(function(response) {
         renderOptions(response);
     })
-
-    // // make all the option tags (second arg of `forEach` is a `this` binding)
-    // hotels.forEach(makeOption, $hotelSelect);
-    // restaurants.forEach(makeOption, $restaurantSelect);
-    // activities.forEach(makeOption, $activitySelect);
-
-    // // Once you've made AJAX calls to retrieve this information,
-    // // call attractions.loadEnhancedAttractions in the fashion
-    // // exampled below in order to integrate it.
-    // attractionsModule.loadEnhancedAttractions('hotels', hotels);
-    // attractionsModule.loadEnhancedAttractions('restaurants', restaurants);
-    // attractionsModule.loadEnhancedAttractions('activities', activities);
+    .catch(utilsModule.logErr);
 
     function makeOption(databaseAttraction) {
         var $option = $('<option></option>') // makes a new option tag
@@ -75,9 +58,24 @@
         var $select = $(this).siblings('select');
         var type = $select.data('type'); // from HTML data-type attribute
         var id = $select.find(':selected').val();
+
+        function addOption() {
+            console.log("trying to add option");
+            return $.ajax({
+                method: 'POST',
+                url: '/api/days/' + currentDay.id + '/' + type,
+                data: {'optionId': id}
+            })
+        }
+
+        addOption()
+        .then(function(attraction) {
+            console.log("You got back...");
+            console.log(attraction);
+        })
         // get associated attraction and add it to the current day in the trip
-        var attraction = attractionsModule.getByTypeAndId(type, id);
-        tripModule.addToCurrent(attraction);
+        // var attraction = attractionsModule.getByTypeAndId(type, id);
+        // tripModule.addToCurrent(attraction);
     });
 
 });

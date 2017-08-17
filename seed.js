@@ -2,11 +2,13 @@
 // The data can then be loaded with the node seed.js
 
 var Promise = require('bluebird');
-var db = require('./models');
+var Sequelize = require('sequelize');
+var db = require('./models').db;
 var Place = require('./models').Place;
 var Hotel = require('./models').Hotel;
 var Restaurant = require('./models').Restaurant;
 var Activity = require('./models').Activity;
+var Day = require('./models').Day;
 
 var data = {
   hotel: [
@@ -75,7 +77,19 @@ db.sync({force: true})
   });
 })
 .then(function () {
-  console.log("Finished inserting data");
+  console.log("Inserting day 1");
+  return Day.create({number: 1, hotelId: 1})
+})
+.then(function () {
+  console.log("Inserting day 2");
+  return Day.create({number: 2, hotelId: 2})
+})
+.then(function () {
+  console.log("Inserting day 3");
+  return Day.create({number: 3, hotelId: 3})
+})
+.then(function() {
+  console.log("Finished inserting days!");
 })
 .catch(function (err) {
   console.error('There was totally a problem', err, err.stack);

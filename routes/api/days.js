@@ -6,38 +6,103 @@ var Day = require('../../models').Day;
 
 var days = require('express').Router();
 
-// get a list of all the days
+// retrieve all days
 days.get('/', function(req, res, next) {
-  // retrieve all the days
-  res.json("You're trying to list the days!");
+  Day.findAll({
+    include: [Hotel, Restaurant, Activity]
+  })
+  .then(function(days){
+    res.json(days);
+  })
+  .catch(next);
 })
 
-// get one specific day
-days.get('/:id', function(req, res, next) {
-  // retrieve one day
-  res.json("You're trying to retrieve one day!");
+// create a new day
+days.post('/', function(req, res, next) {
+  Day.count()
+  .then(function(c) {
+    return Day.create({number: c + 1});
+  })
+  .then(function(newDay) {
+    res.json(newDay);
+  })
+  .catch(next);
 })
 
 // delete one specific day
 days.delete('/:id', function(req, res, next) {
-  // delete a day from the database
-  res.json("You're trying to delete a day!");
+  Day.destroy({
+    where: {
+      id: req.params.id
+    }
+  })
+  .then(function() {
+    res.sendStatus(204);
+  })
+  .catch(next);
 })
 
-// create a new day
-days.put('/:id', function(req, res, next) {
-  // add a new day to the database
-  res.json("You're trying to make a new day!");
+days.param('id', function(req, res, next, dayId) {
+  Day.findById(dayId)
+  .then(function(day) {
+    req.day = day;
+    next();
+  })
+  .catch(next)
 })
 
-// add an attraction to that day
-days.put('/:id/:attraction', function(req, res, next) {
-  res.json("You're trying to add an attraction!");
+// add a hotel to a day
+days.put('/:id/hotel', function(req, res, next) {
+  req.day.setHotel(req.body.hotelId)
+  .then(function(day) {
+    res.sendStatus(204);
+  })
+  .catch(next);
 })
 
-// remove an attraction from that day
-days.delete('/:id/:attraction', function(req, res, next) {
-  res.json("You're trying to remove an attraction!");
+// add a restaurant to a day
+days.put('/:id/restaurant', function(req, res, next) {
+  req.day.addRestaurant(req.body.restaurantId)
+  .then(function(day) {
+    res.sendStatus(204);
+  })
+  .catch(next);
+})
+
+// add an activity to a day
+days.put('/:id/activity', function(req, res, next) {
+  req.day.addActivity(req.body.activityId)
+  .then(function(day) {
+    res.sendStatus(204);
+  })
+  .catch(next);
+})
+
+// remove a hotel from a day
+days.delete('/:id/hotel', function(req, res, next) {
+  req.day.setHotel(null)
+  .then(function(day) {
+    res.sendStatus(204);
+  })
+  .catch(next);
+})
+
+// remove a restaurant from a day
+days.delete('/:id/restaurant/:restaurantId', function(req, res, next) {
+  req.day.removeRestaurant(req.params.restaurantId)
+  .then(function(day) {
+    res.sendStatus(204);
+  })
+  .catch(next);
+})
+
+// remove an activity from a day
+days.delete('/:id/activity/:activityId', function(req, res, next) {
+  req.day.removeActivity(req.params.activityId)
+  .then(function(day) {
+    res.sendStatus(204);
+  })
+  .catch(next);
 })
 
 module.exports = days;
